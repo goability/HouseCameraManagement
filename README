@@ -1,0 +1,8 @@
+**Replay Administration Tools**
+
+This set of tools is designed to run administration functions for the Replay Image Playback suite.
+
+1. Cleanup night files
+2. Remove dead images
+3. Remove dark images
+4. Archive night files
