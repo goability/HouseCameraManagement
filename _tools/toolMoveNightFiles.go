@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"net/http"
 )
+var test = "test"
 var camFolderNameBaseName = "ImportCam"
 var basefolder = "C:\\FTPUploads"
 var nightStagingFolder = "c:\\temp\\nightFiles"
