@@ -3,16 +3,23 @@ package main
 //A change
 import (
 	"fmt"
+	"html"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 )
 
+const DEBUG bool = true
+const RUNASWEBSERVER = false
+
+var serverPort = "9090"
 var camFolderName = "IMPORT"
-var baseSearchFolder = "/home/matt/images/" + camFolderName
-var nightBaseFolder = "/home/matt/images/night/" + camFolderName
+var baseSearchFolder = filepath.Join("/", "home", "matt", "images")
+var nightBaseFolder = filepath.Join("'/", "home", "matt", "images", "night")
 var destFolderDate = ""
 var destFolderTemp = ""
 
@@ -28,22 +35,49 @@ var totalFileMovesFailed = 0
 
 var NightFolders = ""
 
-const DEBUG bool = true
-
+func setWindowsPaths() {
+	baseSearchFolder = filepath.Join("c:\\", "FTPUploads", camFolderName)
+	nightBaseFolder = filepath.Join("c:\\", "nightfiles", camFolderName)
+}
 func main() {
-	showStart()
-
-	//Walk the baseSearchFolder
-	err := filepath.Walk(baseSearchFolder, walkFunc)
-	if err != nil {
-		fmt.Print("ERROR Walking folder:  ")
-		fmt.Print(baseSearchFolder)
-		fmt.Println(" ERR:", err)
+	if runtime.GOOS == "windows" {
+		setWindowsPaths()
 	} else {
-		showSummary()
+		nightBaseFolder = filepath.Join(baseSearchFolder, camFolderName)
+		baseSearchFolder = filepath.Join(baseSearchFolder, camFolderName)
+	}
+
+	if RUNASWEBSERVER {
+		startWebServer()
+	} else {
+
+		showStart()
+
+		//Walk the baseSearchFolder
+		err := filepath.Walk(baseSearchFolder, walkFunc)
+		if err != nil {
+			fmt.Print("ERROR Walking folder:  ")
+			fmt.Print(baseSearchFolder)
+			fmt.Println(" ERR:", err)
+		} else {
+			showSummary()
+		}
 	}
 
 }
+func startWebServer() {
+
+	http.HandleFunc("/", showMainToolingPage)
+	http.HandleFunc("/_toolMoveFiles", movenightfiles)
+
+	fmt.Println("Running Camera Management Webserver on port " + serverPort)
+	log.Fatal(http.ListenAndServe(":"+serverPort, nil))
+}
+
+func showMainToolingPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Replay Main Page")
+}
+
 func showSummary() {
 	fmt.Println("\n\n--------- FINISHED -------")
 
@@ -99,7 +133,7 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 					fmt.Println("[IGNORE DATE ]  " + currentDirectory)
 					return filepath.SkipDir
 				} else {
-					destFolderDate = nightBaseFolder + "/" + currentDirectory
+					destFolderDate = filepath.Join(nightBaseFolder, currentDirectory)
 					fmt.Println("\n[CREATE DIRECTORY] :  " + destFolderTemp)
 					fmt.Println("Making staging folder for date: " + destFolderDate)
 					if os.MkdirAll(destFolderDate, 0777) != nil {
@@ -112,7 +146,7 @@ func walkFunc(path string, info os.FileInfo, err error) error {
 				if IsFolderNightTime(currentDirectory) {
 					NightFolders += currentDirectory + ", "
 					fmt.Println(currentDirectory + " is a nighttime folder")
-					destFolderTemp = destFolderDate + "/" + currentDirectory
+					destFolderTemp = filepath.Join(destFolderDate, currentDirectory)
 					fmt.Println("\n[CREATE DIRECTORY] :  " + destFolderTemp)
 
 					if os.MkdirAll(destFolderTemp, 0777) != nil {
@@ -145,8 +179,8 @@ func MoveAllFilesInFolder(folderName string, destFolderName string) {
 			totalFilesDiscovered++
 
 			if DEBUG == false {
-				fileDest := destFolderName + "/" + file.Name()
-				fileSrc := folderName + "/" + file.Name()
+				fileDest := filepath.Join(destFolderName, file.Name())
+				fileSrc := filepath.Join(folderName, file.Name())
 				errMv := os.Rename(fileSrc, fileDest)
 
 				if errMv != nil {
@@ -179,4 +213,43 @@ func IsFolderADate(fileName string) bool {
 	} else {
 		return false
 	}
+}
+
+func movenightfiles(w http.ResponseWriter, r *http.Request) {
+
+	keys := r.URL.Query()["cameraID"]
+
+	if len(keys) < 1 {
+		printLog(w, "Invalid Input - missing param", true)
+	} else {
+		baseSearchFolder = filepath.Join(baseSearchFolder, keys[0])
+		nightBaseFolder = filepath.Join(nightBaseFolder, camFolderName)
+		printLog(w, "Requesting to move nightfiles from folder: "+html.EscapeString(string(baseSearchFolder))+" to "+html.EscapeString(string(nightBaseFolder)), true)
+	}
+
+	err := filepath.Walk(baseSearchFolder, walkFunc)
+	if err != nil {
+		fmt.Println("Error :", err)
+	}
+
+	defer printSummary(w)
+
+}
+func printLog(w http.ResponseWriter, txt string, sendToPage bool) {
+
+	fmt.Println(txt)
+	if sendToPage {
+		fmt.Fprint(w, html.EscapeString(txt))
+	}
+}
+func printSummary(w http.ResponseWriter) {
+	if totalBytesMoved > 0 {
+		printLog(w, fmt.Sprintf("\nTotal Bytes Moved: %d", totalBytesMoved), true)
+		printLog(w, fmt.Sprintf("\nTotal Files Moved: %d ", totalFilesMoved), true)
+	} else {
+		printLog(w, "\nNothing was done...", true)
+	}
+	totalBytesMoved = 0
+	totalFilesMoved = 0
+
 }
