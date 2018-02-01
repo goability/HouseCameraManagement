@@ -8,12 +8,12 @@ usage: Supports CLI or HTTP Interface
 ReplayAdminTools/
 	.git/
 	docs/
-	ReplayAdminTools/
-		main.go
-	ReplayFileUtilities
+	AdminPanel/
+		main.go  -- Start WebServer or accept CLI input
+	ReplayFileUtilities/ -- File related routines
 		FixDateTimeErrors.go
 		MoveNightFiles.go
-	ReplayImageUtilities/
+	ReplayImageUtilities/ -- Work in progress
 		WIP
 	
 
