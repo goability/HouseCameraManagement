@@ -5,7 +5,7 @@ It is designed to be run internally by an Admin to help cleanup and archive unus
 
 usage: Supports CLI or HTTP Interface
 
-ReplayAdmintools/
+ReplayAdminTools/
 	.git/
 	docs/
 	ReplayAdminTools/
