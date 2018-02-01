@@ -14,12 +14,11 @@
 		>  i.e.  files found between 10:30 and 11:04.  Get a list of files past 10:59 and move them into the 1100 folder on next iteration
 
 */
-package main
+package ReplayFileUtilities
 
 //A change
 import (
 	"fmt"
-	"html"
 	"log"
 	"net/http"
 	"os"
@@ -32,47 +31,10 @@ import (
 // Walk the folder
 //  Get the timestamp of the file
 //  If timestamp is off by more than 60 seconds, rename it
-
-const DEBUG bool = false
-const RUNASWEBSERVER = false
-
-var serverPort = "9090"
-var camFolderName = "IMPORT"
-var baseSearchFolder = filepath.Join("/", "home", "matt", "images")
-
-var datesToIgnore = map[string]bool{"20171224": true, "20171231": true, "20170906": false}
-
-var totalFilesDiscovered = 0
-var currentDirectoryFileCount = 0
-var renamedFileByDirectory = make(map[string]int)
-var existingFilesLeftInPlace = make(map[string]int)
-var createdDirectories = make(map[string]bool) // Used to track AND to not retraverse
-var existingDestinationDirectoryCount = 0
-var existingFilesAlreadyinDestination = 0 // Track files that already existing before renaming
-var lastConstructedDestFolder = ""        // used to track when destfolder name changes
-var totalFileCountBeforeScan = 0
-var totalFileCountAfterScan = 0
-
-var totalFilesRenamed = 0
-var totalFilesRenamedFailed = 0
-
-var CurrentDirectory = ""
-var CurrentDateDirectory = ""
-var CurrentFile = ""
-
-var fileExtension = ".jpg"
-
-//File index markers
-
-var lengthOfDateTimeStringInFileName = 16 //this is number of indexes from end of file that YYYY starts
-//i.e. YYYYMMDDHHMMSSms.jpg = 20
-
-var indexOfDateStart = 0
-
-func setWindowsPaths() {
-	baseSearchFolder = filepath.Join("c:\\", "FTPUploads", camFolderName)
+func Loopback() {
+	fmt.Println("Replay File Utilities")
 }
-func main() {
+func FixDateTimeErrors() {
 	CurrentDirectory = baseSearchFolder
 	if runtime.GOOS == "windows" {
 		setWindowsPaths()
@@ -147,21 +109,7 @@ func walkCountFunc(path string, info os.FileInfo, err error) error {
 	}
 	return nil
 }
-func showStart() {
-	fmt.Println("\n\n---------------------------")
-	fmt.Println("STARTING SCAN: " + baseSearchFolder)
-	fmt.Println("")
-	totalFilesDiscovered = 0
-}
 
-func createNightFolderForCamera(folder string) {
-
-	fmt.Println("\n[CREATE DIRECTORY] :  " + folder)
-	fmt.Println("Making night folder for camera: " + folder)
-	if os.MkdirAll(folder, 0777) != nil {
-		fmt.Println("Error making folder: " + folder)
-	}
-}
 func walkFunc(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
@@ -370,13 +318,7 @@ func IsFileTimeStampCorrect(fileName string, actualTime time.Time) string {
 	}
 	return corectedDateTime
 }
-func IsFolderADate(fileName string) bool {
-	if len(fileName) == 8 {
-		return true
-	} else {
-		return false
-	}
-}
+
 func IsFolderATime(fileName string) bool {
 	if len(fileName) == 4 && (fileName[2] == '0' || fileName[2] == '3') {
 		return true
@@ -384,15 +326,7 @@ func IsFolderATime(fileName string) bool {
 		return false
 	}
 }
-
-func printLog(w http.ResponseWriter, txt string, sendToPage bool) {
-
-	fmt.Println(txt)
-	if sendToPage {
-		fmt.Fprint(w, html.EscapeString(txt))
-	}
-}
-func printSummary(w http.ResponseWriter) {
+func printSummaryForDatetimeFix(w http.ResponseWriter) {
 	if totalFilesRenamed > 0 {
 		printLog(w, fmt.Sprintf("\nTotal Files Rename: %d ", totalFilesRenamed), true)
 		printLog(w, fmt.Sprintf("\nTotal Files Rename Failures: %d ", totalFilesRenamedFailed), true)
@@ -401,4 +335,6 @@ func printSummary(w http.ResponseWriter) {
 	}
 	totalFilesRenamed = 0
 
+}
+func fixDateTimeSyncErrorsHTTPHandler(w http.ResponseWriter, r *http.Request) {
 }
