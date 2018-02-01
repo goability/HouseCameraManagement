@@ -1,8 +1,28 @@
 ***Replay Administration Tools**
 
 This set of tools is designed to run administration functions for the Replay Image Playback suite.
+It is designed to be run internally by an Admin to help cleanup and archive unused files
 
-1. Cleanup night files
-2. Remove dead images
-3. Remove dark images
-4. Archive night files
+usage: Supports CLI or HTTP Interface
+
+ReplayAdmintools/
+	.git/
+	docs/
+	ReplayAdminTools/
+		main.go
+	ReplayFileUtilities
+		FixDateTimeErrors.go
+		MoveNightFiles.go
+	ReplayImageUtilities/
+		WIP
+	
+
+Library:  ReplayFileUtilities 
+
+1. Move night files based on a date time : MoveNightFiles.go
+2. Fix Files with a date-time out of sync :fixd
+
+Library:  ReplayImageUtilities
+
+1. Remove dead images - With no presence
+2. Remove dark images - Night files
