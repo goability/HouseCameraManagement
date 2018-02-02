@@ -25,21 +25,18 @@ func MoveNightFiles() {
 		baseSearchFolder = filepath.Join(baseSearchFolder, camFolderName)
 	}
 
-	if RUNASWEBSERVER {
-		startWebServer()
-	} else {
-		showStart()
+	showStart()
 
-		//Walk the baseSearchFolder
-		err := filepath.Walk(baseSearchFolder, walkFuncMoveNightFiles)
-		if err != nil {
-			fmt.Print("ERROR Walking folder:  ")
-			fmt.Print(baseSearchFolder)
-			fmt.Println(" ERR:", err)
-		} else {
-			showSummaryMoveNightFiles()
-		}
+	//Walk the baseSearchFolder
+	err := filepath.Walk(baseSearchFolder, walkFuncMoveNightFiles)
+	if err != nil {
+		fmt.Print("ERROR Walking folder:  ")
+		fmt.Print(baseSearchFolder)
+		fmt.Println(" ERR:", err)
+	} else {
+		showSummaryMoveNightFiles()
 	}
+
 }
 
 func showSummaryMoveNightFiles() {
